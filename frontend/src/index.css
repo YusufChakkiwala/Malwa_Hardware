@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg-page: #f5f9ff;
+  --bg-panel: rgba(255, 255, 255, 0.9);
+  --bg-panel-strong: rgba(255, 255, 255, 0.96);
+  --line-soft: rgba(148, 163, 184, 0.24);
+  --line-strong: rgba(100, 116, 139, 0.32);
+  --text-main: #0f172a;
+  --text-soft: #475569;
+  --brand: #f97316;
+  --brand-strong: #ea580c;
+  --brand-cool: #0284c7;
+  --ring: rgba(2, 132, 199, 0.22);
+}
+
+body {
+  @apply font-body text-slate-900;
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  background-image: radial-gradient(circle at 8% 10%, rgba(14, 165, 233, 0.2), transparent 32%),
+    radial-gradient(circle at 92% 4%, rgba(249, 115, 22, 0.18), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #eff6ff 45%, #eefcf7 100%);
+  background-attachment: fixed;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(14, 165, 233, 0.22);
+  color: #082f49;
+}
+
+a {
+  @apply text-inherit no-underline;
+}
+
+input,
+textarea,
+select {
+  @apply w-full rounded-xl border px-3 py-2 text-sm text-slate-900 outline-none;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--line-soft);
+  box-shadow: 0 10px 20px rgba(148, 163, 184, 0.1);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(2, 132, 199, 0.72);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+button {
+  @apply transition duration-200 ease-out;
+}
+
+.card {
+  @apply rounded-3xl border p-5 text-slate-900 shadow-industrial;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(247, 252, 255, 0.93) 100%);
+  border-color: var(--line-soft);
+}
+
+.surface-panel {
+  @apply rounded-3xl border p-6 shadow-industrial;
+  background: linear-gradient(165deg, var(--bg-panel-strong) 0%, rgba(242, 249, 255, 0.96) 100%);
+  border-color: var(--line-soft);
+}
+
+.surface-soft {
+  @apply rounded-2xl border p-4;
+  background: var(--bg-panel);
+  border-color: var(--line-soft);
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-white;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  box-shadow: 0 12px 26px rgba(249, 115, 22, 0.26);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px) scale(1.01);
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold text-slate-700;
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.btn-secondary:hover {
+  border-color: rgba(2, 132, 199, 0.38);
+  background: rgba(224, 242, 254, 0.6);
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold text-red-700;
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(254, 226, 226, 0.72);
+}
+
+.btn-danger:hover {
+  background: rgba(254, 202, 202, 0.9);
+}
+
+.page-title {
+  @apply font-heading text-4xl tracking-tight text-slate-900 md:text-5xl;
+}
+
+.page-subtitle {
+  @apply mt-2 max-w-3xl text-sm text-slate-600 md:text-base;
+}
+
+.chip {
+  @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold;
+  border-color: rgba(56, 189, 248, 0.34);
+  color: #0f766e;
+  background: rgba(236, 254, 255, 0.82);
+}
+
+.data-table {
+  @apply w-full min-w-[760px] text-sm text-slate-700;
+}
+
+.data-table thead {
+  background: rgba(226, 232, 240, 0.7);
+}
+
+.data-table th {
+  @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600;
+}
+
+.data-table td {
+  @apply px-4 py-3;
+}
+
+.data-table tbody tr {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.data-table tbody tr:hover {
+  background: rgba(226, 232, 240, 0.38);
+}
+
+.glass-highlight {
+  background: linear-gradient(125deg, rgba(255, 255, 255, 0.8), rgba(241, 245, 249, 0.55));
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  backdrop-filter: blur(8px);
+}
+
+.float-in {
+  animation: floatIn 0.45s ease-out both;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

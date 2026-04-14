@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: malwa-backend
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DNS_FALLBACK_SERVERS: ${MONGO_DNS_FALLBACK_SERVERS:-8.8.8.8,1.1.1.1}
+      JWT_SECRET: super-secret-change-me
+      PORT: 5000
+      FRONTEND_URL: http://localhost:5173
+      MAX_UPLOAD_SIZE_MB: 5
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-malwa}
+      ADMIN_SEED_USERNAME: admin
+      ADMIN_SEED_PASSWORD: admin123
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    ports:
+      - "5000:5000"
+    command: sh -c "npm run seed && npm start"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: malwa-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
