@@ -111,3 +111,7 @@ Services:
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:5000`
+
+## Security Note
+
+If you cloned this repo before the history rewrite, follow [SECURITY_ROTATION.md](SECURITY_ROTATION.md).
