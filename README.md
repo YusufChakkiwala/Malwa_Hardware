@@ -103,6 +103,12 @@ MONGO_URI="<your-test-uri>" npm test
 
 ## Docker
 
+Copy the template and set real secrets before running:
+
+```bash
+cp .env.example .env
+```
+
 ```bash
 docker compose up --build
 ```

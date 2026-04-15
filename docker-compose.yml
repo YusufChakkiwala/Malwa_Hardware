@@ -6,18 +6,18 @@ services:
       context: ./backend
     container_name: malwa-backend
     environment:
-      MONGO_URI: ${MONGO_URI}
+      MONGO_URI: ${MONGO_URI:?MONGO_URI is required}
       MONGO_DNS_FALLBACK_SERVERS: ${MONGO_DNS_FALLBACK_SERVERS:-8.8.8.8,1.1.1.1}
-      JWT_SECRET: super-secret-change-me
-      PORT: 5000
-      FRONTEND_URL: http://localhost:5173
-      MAX_UPLOAD_SIZE_MB: 5
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      PORT: ${PORT:-5000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-5}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
       CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-malwa}
-      ADMIN_SEED_USERNAME: admin
-      ADMIN_SEED_PASSWORD: admin123
+      ADMIN_SEED_USERNAME: ${ADMIN_SEED_USERNAME:?ADMIN_SEED_USERNAME is required}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}
     dns:
       - 8.8.8.8
       - 1.1.1.1
