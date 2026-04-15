@@ -2,7 +2,7 @@ function About() {
   return (
     <section className="space-y-6">
       <div className="surface-panel">
-        <p className="chip mb-4">Since 2005</p>
+        <p className="chip mb-4">Since 2001</p>
         <h1 className="page-title">About Malwa Hardware</h1>
         <p className="page-subtitle">
           Malwa Hardware is a trusted local hardware supplier focused on genuine products, fast delivery, and support
