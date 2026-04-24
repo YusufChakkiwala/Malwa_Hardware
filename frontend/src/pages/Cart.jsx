@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { sanitizeUnit } from '../utils/pricing';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=900';
 
@@ -29,7 +30,15 @@ function Cart() {
             />
             <div>
               <h3 className="text-lg font-semibold text-slate-900">{item.name}</h3>
-              <p className="text-sm text-slate-600">Rs {item.price.toFixed(2)} each</p>
+              <p className="text-sm text-slate-600">
+                Rs {item.price.toFixed(2)} / {sanitizeUnit(item.unit)}
+              </p>
+              {item.discountPrice !== null && (
+                <p className="text-xs text-slate-500 line-through">
+                  Original: Rs {Number(item.originalPrice).toFixed(2)} / {sanitizeUnit(item.unit)}
+                </p>
+              )}
+              <p className="text-xs text-slate-500">Available: {item.stock} {sanitizeUnit(item.unit)} (max allowed)</p>
             </div>
           </div>
 
@@ -42,6 +51,9 @@ function Cart() {
               onChange={(event) => updateQuantity(item.id, Number(event.target.value))}
               className="w-20"
             />
+            <p className="text-xs text-slate-600">
+              {item.quantity} {sanitizeUnit(item.unit)}
+            </p>
             <button
               type="button"
               onClick={() => removeFromCart(item.id)}
@@ -50,6 +62,7 @@ function Cart() {
               Remove
             </button>
           </div>
+          <p className="text-sm font-semibold text-slate-700">Line total: Rs {(item.quantity * item.price).toFixed(2)}</p>
         </article>
       ))}
 

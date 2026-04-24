@@ -28,6 +28,7 @@ const OrderItem = require('../src/models/OrderItem');
       slug: `industrial-wire-${Date.now()}`,
       description: 'High quality copper wire',
       price: 800,
+      discountPrice: 650,
       categoryId: category.id,
       stock: 8
     });
@@ -49,6 +50,8 @@ const OrderItem = require('../src/models/OrderItem');
 
     expect(response.status).toBe(201);
     expect(response.body.items).toHaveLength(1);
+    expect(response.body.items[0].priceAtPurchase).toBe(650);
+    expect(response.body.totalAmount).toBe(1950);
 
     const updatedProduct = await Product.findOne({ id: product.id });
     expect(updatedProduct.stock).toBe(5);

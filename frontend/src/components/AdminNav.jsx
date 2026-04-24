@@ -5,7 +5,8 @@ const links = [
   { to: '/admin/products', label: 'Products' },
   { to: '/admin/orders', label: 'Orders' },
   { to: '/admin/chats', label: 'Chats' },
-  { to: '/admin/queries', label: 'Queries' }
+  { to: '/admin/queries', label: 'Queries' },
+  { to: '/admin/faqs', label: 'FAQs' }
 ];
 
 function AdminNav() {

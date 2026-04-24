@@ -5,6 +5,7 @@ const net = require('net');
 let connectPromise;
 
 const DEFAULT_DNS_FALLBACK_SERVERS = ['8.8.8.8', '1.1.1.1'];
+const DEFAULT_DB_NAME = 'malwa_hardware';
 
 function parseDnsFallbackServers() {
   const raw = process.env.MONGO_DNS_FALLBACK_SERVERS;
@@ -25,9 +26,32 @@ function shouldRetryWithSrvBypass(uri, error) {
     typeof uri === 'string' &&
     uri.startsWith('mongodb+srv://') &&
     error &&
-    error.code === 'ECONNREFUSED' &&
-    error.syscall === 'querySrv'
+    error.syscall === 'querySrv' &&
+    ['ECONNREFUSED', 'ETIMEOUT', 'EAI_AGAIN', 'ENOTFOUND', 'SERVFAIL'].includes(String(error.code || ''))
   );
+}
+
+function normalizeMongoUri(uri) {
+  if (!uri) {
+    return '';
+  }
+
+  let next = String(uri).trim();
+
+  // Some editors/users append semicolons like a JS statement.
+  if (next.endsWith(';')) {
+    next = next.slice(0, -1).trim();
+  }
+
+  // Defensive: accept accidental wrapping quotes.
+  if (
+    (next.startsWith('"') && next.endsWith('"')) ||
+    (next.startsWith("'") && next.endsWith("'"))
+  ) {
+    next = next.slice(1, -1);
+  }
+
+  return next.trim();
 }
 
 function resolveSrv(resolver, hostname) {
@@ -102,12 +126,28 @@ async function buildNonSrvUriFromSrvUri(srvUri) {
 }
 
 async function connectWithUri(uri) {
-  const connection = await mongoose.connect(uri, {
-    serverSelectionTimeoutMS: 10000
+  const normalizedUri = normalizeMongoUri(uri);
+  let dbNameFromUri = '';
+
+  try {
+    const parsed = new URL(normalizedUri);
+    if (parsed.pathname && parsed.pathname !== '/') {
+      dbNameFromUri = decodeURIComponent(parsed.pathname).replace(/^\//, '');
+    }
+  } catch {
+    // Ignore URL parsing issues; mongoose will validate the URI.
+  }
+
+  const dbNameFromEnv = String(process.env.MONGO_DB_NAME || '').trim();
+  const dbName = dbNameFromUri || dbNameFromEnv || DEFAULT_DB_NAME;
+
+  const connection = await mongoose.connect(normalizedUri, {
+    serverSelectionTimeoutMS: 10000,
+    dbName
   });
 
   const host = connection.connection.host || 'mongodb-host';
-  console.log(`MongoDB connected: ${host}`);
+  console.log(`MongoDB connected: ${host} (db: ${connection.connection.name})`);
   return connection.connection;
 }
 
@@ -116,14 +156,16 @@ async function connectDB() {
     return mongoose.connection;
   }
 
-  if (!process.env.MONGO_URI) {
+  const mongoUri = normalizeMongoUri(process.env.MONGO_URI);
+
+  if (!mongoUri) {
     throw new Error('MONGO_URI is required');
   }
 
   if (!connectPromise) {
-    connectPromise = connectWithUri(process.env.MONGO_URI).catch(async (error) => {
-      if (shouldRetryWithSrvBypass(process.env.MONGO_URI, error)) {
-        const fallbackUri = await buildNonSrvUriFromSrvUri(process.env.MONGO_URI);
+    connectPromise = connectWithUri(mongoUri).catch(async (error) => {
+      if (shouldRetryWithSrvBypass(mongoUri, error)) {
+        const fallbackUri = await buildNonSrvUriFromSrvUri(mongoUri);
         console.warn(
           `MongoDB SRV DNS lookup failed (${error.code}). Retrying with standard URI via DNS fallback servers.`
         );

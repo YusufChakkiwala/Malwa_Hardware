@@ -26,6 +26,8 @@ function ProductForm() {
     slug: '',
     description: '',
     price: '',
+    discountPrice: '',
+    unit: 'pcs',
     categoryId: '',
     stock: '',
     imageUrl: ''
@@ -41,6 +43,8 @@ function ProductForm() {
           slug: product.slug,
           description: product.description,
           price: product.price,
+          discountPrice: product.discountPrice ?? '',
+          unit: product.unit || 'pcs',
           categoryId: product.categoryId,
           stock: product.stock,
           imageUrl: product.imageUrl || ''
@@ -59,6 +63,14 @@ function ProductForm() {
     setIsSubmitting(true);
 
     try {
+      const normalizedPrice = Number(form.price);
+      const normalizedDiscountPrice = form.discountPrice === '' ? null : Number(form.discountPrice);
+      if (normalizedDiscountPrice !== null && normalizedDiscountPrice > normalizedPrice) {
+        setSubmitError('Discount price must be less than or equal to price.');
+        setIsSubmitting(false);
+        return;
+      }
+
       let imageUrl = form.imageUrl;
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
@@ -67,9 +79,11 @@ function ProductForm() {
       const payload = {
         ...form,
         imageUrl: imageUrl || '',
-        price: Number(form.price),
+        price: normalizedPrice,
+        discountPrice: normalizedDiscountPrice,
+        unit: String(form.unit || '').trim() || 'pcs',
         categoryId: Number(form.categoryId),
-        stock: Number(form.stock)
+        ...(String(form.stock).trim() !== '' ? { stock: Number(form.stock) } : {})
       };
 
       if (isEdit) {
@@ -112,7 +126,9 @@ function ProductForm() {
             <input required value={form.name} onChange={(event) => handleChange('name', event.target.value)} placeholder="Name" />
             <input required value={form.slug} onChange={(event) => handleChange('slug', event.target.value)} placeholder="Slug" />
             <input required value={form.price} onChange={(event) => handleChange('price', event.target.value)} placeholder="Price" type="number" />
-            <input required value={form.stock} onChange={(event) => handleChange('stock', event.target.value)} placeholder="Stock" type="number" />
+            <input value={form.discountPrice} onChange={(event) => handleChange('discountPrice', event.target.value)} placeholder="Discount Price (optional)" type="number" min="0" />
+            <input required value={form.unit} onChange={(event) => handleChange('unit', event.target.value)} placeholder="Unit (pcs, kg, box...)" />
+            <input value={form.stock} onChange={(event) => handleChange('stock', event.target.value)} placeholder="Stock (optional, default 0)" type="number" min="0" />
             <select required value={form.categoryId} onChange={(event) => handleChange('categoryId', event.target.value)}>
             <option value="">Select category</option>
              

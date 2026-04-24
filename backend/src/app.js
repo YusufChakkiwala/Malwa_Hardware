@@ -13,6 +13,7 @@ const queryRoutes = require('./routes/queryRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const faqRoutes = require("./routes/faqRoutes");
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api', queryRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', categoryRoutes);
+app.use("/api", faqRoutes);
 
 app.use(errorHandler);
 

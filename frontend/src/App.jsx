@@ -10,6 +10,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import FAQPage from './pages/FAQPage';
 import OrderHistory from './pages/OrderHistory';
 import Dashboard from './pages/Admin/Dashboard';
 import AdminProducts from './pages/Admin/Products';
@@ -17,6 +18,7 @@ import ProductForm from './pages/Admin/ProductForm';
 import AdminOrders from './pages/Admin/Orders';
 import AdminChats from './pages/Admin/Chats';
 import AdminQueries from './pages/Admin/Queries';
+import AdminFAQ from './pages/AdminFAQ';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import { isAdminAuthenticated } from './services/auth';
@@ -66,6 +68,7 @@ function App() {
           />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQPage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/login" element={<Auth />} />
           <Route
@@ -123,6 +126,14 @@ function App() {
             element={
               <RequireAdmin>
                 <AdminQueries />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/admin/faqs"
+            element={
+              <RequireAdmin>
+                <AdminFAQ />
               </RequireAdmin>
             }
           />

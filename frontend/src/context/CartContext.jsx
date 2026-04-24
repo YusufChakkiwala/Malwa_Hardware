@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { getPricing, sanitizeUnit } from '../utils/pricing';
 
 const CartContext = createContext(null);
 
@@ -29,9 +30,22 @@ function resolveImageUrl(imageUrl) {
 }
 
 function normalizeCartItem(item) {
+  const originalPrice = Number.isFinite(Number(item.originalPrice))
+    ? Number(item.originalPrice)
+    : Number(item.price) || 0;
+  const pricing = getPricing({
+    price: originalPrice,
+    discountPrice: item.discountPrice
+  });
+  const storedPrice = Number(item.price);
+  const effectivePrice = Number.isFinite(storedPrice) && storedPrice >= 0 ? storedPrice : pricing.effectivePrice;
+
   return {
     ...item,
-    price: Number(item.price) || 0,
+    price: effectivePrice,
+    originalPrice,
+    discountPrice: pricing.discountPrice,
+    unit: sanitizeUnit(item.unit),
     stock: Number.isFinite(Number(item.stock)) ? Number(item.stock) : 0,
     quantity: Number.isFinite(Number(item.quantity)) && Number(item.quantity) > 0 ? Number(item.quantity) : 1,
     imageUrl: resolveImageUrl(item.imageUrl)
@@ -56,6 +70,8 @@ export function CartProvider({ children }) {
 
   const addToCart = (product, quantity = 1) => {
     setItems((prev) => {
+      const pricing = getPricing(product);
+      const resolvedUnit = sanitizeUnit(product.unit);
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
         return prev.map((item) =>
@@ -63,6 +79,10 @@ export function CartProvider({ children }) {
             ? {
                 ...item,
                 imageUrl: item.imageUrl || resolveImageUrl(product.imageUrl),
+                price: pricing.effectivePrice,
+                originalPrice: pricing.price,
+                discountPrice: pricing.discountPrice,
+                unit: resolvedUnit,
                 quantity: Math.min(item.quantity + quantity, product.stock)
               }
             : item
@@ -73,7 +93,10 @@ export function CartProvider({ children }) {
         {
           id: product.id,
           name: product.name,
-          price: Number(product.price),
+          price: pricing.effectivePrice,
+          originalPrice: pricing.price,
+          discountPrice: pricing.discountPrice,
+          unit: resolvedUnit,
           imageUrl: resolveImageUrl(product.imageUrl),
           stock: product.stock,
           quantity: Math.min(quantity, product.stock)

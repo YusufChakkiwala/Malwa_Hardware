@@ -1,10 +1,11 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 
 const bcrypt = require('bcryptjs');
 const { connectDB, disconnectDB } = require('../src/config/db');
 const Admin = require('../src/models/Admin');
 const Category = require('../src/models/Category');
 const Product = require('../src/models/Product');
+const FAQ = require('../src/models/FAQ');
 const { getNextSequence } = require('../src/utils/sequence');
 
 async function upsertCategory({ name, slug }) {
@@ -52,6 +53,39 @@ async function upsertProduct({ slug, data }) {
   });
 }
 
+async function clearFAQs() {
+  await FAQ.deleteMany({});
+  console.log('Cleared existing FAQs');
+}
+
+async function seedFAQs() {
+  const sampleFAQs = [
+    {
+      question: 'What are your store hours?',
+      answer: 'We are open Monday to Saturday from 9 AM to 8 PM.'
+    },
+    {
+      question: 'Do you offer delivery?',
+      answer: 'Yes, we provide free delivery for orders above INR 1000 within 10km.'
+    },
+    {
+      question: 'What payment methods do you accept?',
+      answer: 'We accept cards, UPI, net banking, and cash on delivery.'
+    },
+    {
+      question: 'What is your return policy?',
+      answer: 'You can return products within 7 days of delivery in original condition.'
+    },
+    {
+      question: 'How long is the warranty on tools?',
+      answer: 'Most tools come with 1 year warranty. Check product description for details.'
+    }
+  ];
+
+  await FAQ.insertMany(sampleFAQs);
+  console.log('Sample FAQs seeded successfully');
+}
+
 async function main() {
   await connectDB();
 
@@ -93,6 +127,9 @@ async function main() {
   }
 
   console.log(`Seed complete. Admin username: ${username}`);
+
+  await clearFAQs();
+  await seedFAQs();
 }
 
 main()

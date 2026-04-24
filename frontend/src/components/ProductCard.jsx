@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { getPricing, sanitizeUnit } from '../utils/pricing';
 
 function ProductCard({ product }) {
   const { addToCart } = useCart();
   const lowStock = Number(product.stock) <= 5;
+  const pricing = getPricing(product);
+  const unit = sanitizeUnit(product.unit);
 
   return (
     <article className="card group float-in overflow-hidden p-0 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(14,116,144,0.18)]">
@@ -23,13 +26,18 @@ function ProductCard({ product }) {
         <p className="line-clamp-2 text-sm text-slate-600">{product.description}</p>
 
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xl font-extrabold text-orange-600">Rs {Number(product.price).toFixed(2)}</span>
+          <div>
+            <span className="text-xl font-extrabold text-orange-600">Rs {pricing.effectivePrice.toFixed(2)}</span>
+            {pricing.hasDiscount && (
+              <p className="text-xs text-slate-500 line-through">Rs {pricing.price.toFixed(2)}</p>
+            )}
+          </div>
           <span
             className={`rounded-full border px-2 py-1 text-xs font-semibold ${
               lowStock ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
             }`}
           >
-            {lowStock ? `Low Stock (${product.stock})` : `In Stock (${product.stock})`}
+            {lowStock ? `Low Stock (${product.stock} ${unit})` : `In Stock (${product.stock} ${unit})`}
           </span>
         </div>
 

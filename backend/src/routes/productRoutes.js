@@ -21,13 +21,22 @@ function isHttpUrl(value) {
   }
 }
 
-const productBodySchema = z.object({
+const productBodyBaseSchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
   description: z.string().min(2),
   price: z.coerce.number().positive(),
+  discountPrice: z.preprocess(
+    (value) => {
+      if (value === '' || value === undefined) return undefined;
+      if (value === null) return null;
+      return Number(value);
+    },
+    z.number().nonnegative().nullable().optional()
+  ),
+  unit: z.string().trim().min(1).max(30).optional(),
   categoryId: z.coerce.number().int().positive(),
-  stock: z.coerce.number().int().nonnegative(),
+  stock: z.coerce.number().int().nonnegative().optional(),
   imageUrl: z
     .string()
     .trim()
@@ -37,14 +46,31 @@ const productBodySchema = z.object({
     .optional()
 });
 
+function withDiscountValidation(schema) {
+  return schema.superRefine((payload, context) => {
+    if (
+      payload.price !== undefined &&
+      payload.discountPrice !== undefined &&
+      payload.discountPrice !== null &&
+      payload.discountPrice > payload.price
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'discountPrice must be less than or equal to price',
+        path: ['discountPrice']
+      });
+    }
+  });
+}
+
 const createSchema = z.object({
-  body: productBodySchema,
+  body: withDiscountValidation(productBodyBaseSchema),
   params: z.object({}).optional(),
   query: z.object({}).optional()
 });
 
 const updateSchema = z.object({
-  body: productBodySchema.partial(),
+  body: withDiscountValidation(productBodyBaseSchema.partial()),
   params: z.object({ id: z.string().regex(/^\d+$/) }),
   query: z.object({}).optional()
 });

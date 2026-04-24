@@ -134,7 +134,7 @@ function Checkout() {
           {items.map((item) => (
             <div key={item.id} className="flex justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
               <span>
-                {item.name} x {item.quantity}
+                {item.name} x {item.quantity} {item.unit || 'pcs'}
               </span>
               <span>Rs {(item.quantity * item.price).toFixed(2)}</span>
             </div>

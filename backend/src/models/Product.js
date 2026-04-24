@@ -8,6 +8,8 @@ const productSchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, required: true, trim: true },
     price: { type: Number, required: true, min: 0 },
+    discountPrice: { type: Number, min: 0, default: null },
+    unit: { type: String, required: true, trim: true, default: 'pcs' },
     categoryId: { type: Number, required: true, index: true },
     imageUrl: { type: String, default: null },
     stock: { type: Number, required: true, min: 0, default: 0 }

@@ -50,6 +50,57 @@ function normalizeImageUrl(imageUrl) {
   }
 }
 
+function normalizeUnit(unit) {
+  if (unit === undefined) {
+    return undefined;
+  }
+
+  const trimmed = String(unit).trim();
+  return trimmed || 'pcs';
+}
+
+function normalizeDiscountPrice(discountPrice) {
+  if (discountPrice === undefined) {
+    return undefined;
+  }
+
+  if (discountPrice === null || discountPrice === '') {
+    return null;
+  }
+
+  const parsed = Number(discountPrice);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    const error = new Error('discountPrice must be a non-negative number');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return parsed;
+}
+
+function normalizeStock(stock, fallback = undefined) {
+  if (stock === undefined || stock === null || stock === '') {
+    return fallback;
+  }
+
+  const parsed = Number(stock);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    const error = new Error('stock must be a non-negative integer');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return parsed;
+}
+
+function assertDiscountWithinPrice(price, discountPrice) {
+  if (discountPrice !== null && discountPrice > price) {
+    const error = new Error('discountPrice must be less than or equal to price');
+    error.statusCode = 400;
+    throw error;
+  }
+}
+
 async function buildProductFilters(queryText, categoryInput) {
   const filters = [];
   const q = String(queryText || '').trim();
@@ -134,8 +185,13 @@ async function getProductById(req, res, next) {
 
 async function createProduct(req, res, next) {
   try {
-    const { name, slug, description, price, categoryId, stock, imageUrl } = req.body;
+    const { name, slug, description, price, discountPrice, unit, categoryId, stock, imageUrl } = req.body;
     const normalizedImageUrl = normalizeImageUrl(imageUrl);
+    const normalizedDiscountPrice = normalizeDiscountPrice(discountPrice);
+    const normalizedPrice = Number(price);
+    const normalizedUnit = normalizeUnit(unit) || 'pcs';
+    const normalizedStock = normalizeStock(stock, 0);
+    assertDiscountWithinPrice(normalizedPrice, normalizedDiscountPrice);
 
     const category = await Category.findOne({ id: Number(categoryId) });
     if (!category) {
@@ -148,9 +204,11 @@ async function createProduct(req, res, next) {
       name,
       slug,
       description,
-      price: Number(price),
+      price: normalizedPrice,
+      discountPrice: normalizedDiscountPrice,
+      unit: normalizedUnit,
       categoryId: Number(categoryId),
-      stock: Number(stock),
+      stock: normalizedStock,
       imageUrl: normalizedImageUrl
     });
 
@@ -167,8 +225,11 @@ async function createProduct(req, res, next) {
 async function updateProduct(req, res, next) {
   try {
     const id = Number(req.params.id);
-    const { name, slug, description, price, categoryId, stock, imageUrl } = req.body;
+    const { name, slug, description, price, discountPrice, unit, categoryId, stock, imageUrl } = req.body;
     const normalizedImageUrl = normalizeImageUrl(imageUrl);
+    const normalizedDiscountPrice = normalizeDiscountPrice(discountPrice);
+    const normalizedUnit = normalizeUnit(unit);
+    const normalizedStock = normalizeStock(stock);
 
     if (categoryId !== undefined) {
       const category = await Category.findOne({ id: Number(categoryId) });
@@ -177,10 +238,15 @@ async function updateProduct(req, res, next) {
       }
     }
 
-    const existing = await Product.findOne({ id }).select('_id');
+    const existing = await Product.findOne({ id }).select('_id price discountPrice');
     if (!existing) {
       return res.status(404).json({ message: 'Product not found' });
     }
+
+    const nextPrice = price !== undefined ? Number(price) : Number(existing.price);
+    const nextDiscountPrice =
+      discountPrice !== undefined ? normalizedDiscountPrice : existing.discountPrice ?? null;
+    assertDiscountWithinPrice(nextPrice, nextDiscountPrice);
 
     const product = await Product.findByIdAndUpdate(
       existing._id,
@@ -189,8 +255,10 @@ async function updateProduct(req, res, next) {
         ...(slug !== undefined ? { slug } : {}),
         ...(description !== undefined ? { description } : {}),
         ...(price !== undefined ? { price: Number(price) } : {}),
+        ...(discountPrice !== undefined ? { discountPrice: normalizedDiscountPrice } : {}),
+        ...(normalizedUnit !== undefined ? { unit: normalizedUnit } : {}),
         ...(categoryId !== undefined ? { categoryId: Number(categoryId) } : {}),
-        ...(stock !== undefined ? { stock: Number(stock) } : {}),
+        ...(normalizedStock !== undefined ? { stock: normalizedStock } : {}),
         ...(normalizedImageUrl !== undefined ? { imageUrl: normalizedImageUrl } : {})
       },
       {

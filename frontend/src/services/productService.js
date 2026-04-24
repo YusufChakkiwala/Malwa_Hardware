@@ -1,4 +1,5 @@
 import api from './api';
+import { getPricing, sanitizeUnit } from '../utils/pricing';
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 let backendOrigin = 'http://localhost:5000';
@@ -31,8 +32,13 @@ function normalizeProduct(product) {
     return product;
   }
 
+  const pricing = getPricing(product);
+
   return {
     ...product,
+    price: pricing.price,
+    discountPrice: pricing.discountPrice,
+    unit: sanitizeUnit(product.unit),
     imageUrl: resolveImageUrl(product.imageUrl)
   };
 }

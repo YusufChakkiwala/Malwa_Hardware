@@ -44,6 +44,8 @@ function AdminProducts() {
                 <th className="px-3 py-2">Name</th>
                 <th className="px-3 py-2">Category</th>
                 <th className="px-3 py-2">Price</th>
+                <th className="px-3 py-2">Discount</th>
+                <th className="px-3 py-2">Unit</th>
                 <th className="px-3 py-2">Stock</th>
                 <th className="px-3 py-2">Actions</th>
               </tr>
@@ -54,6 +56,8 @@ function AdminProducts() {
                   <td className="px-3 py-2">{product.name}</td>
                   <td className="px-3 py-2">{product.category?.name}</td>
                   <td className="px-3 py-2">Rs {Number(product.price).toFixed(2)}</td>
+                  <td className="px-3 py-2">{product.discountPrice !== null ? `Rs ${Number(product.discountPrice).toFixed(2)}` : '-'}</td>
+                  <td className="px-3 py-2">{product.unit || 'pcs'}</td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       <input

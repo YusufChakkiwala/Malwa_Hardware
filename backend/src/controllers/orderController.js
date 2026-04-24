@@ -3,6 +3,13 @@ const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
 const { getNextSequence } = require('../utils/sequence');
 
+function resolveProductSellingPrice(product) {
+  const price = Number(product?.price) || 0;
+  const discountPrice = Number(product?.discountPrice);
+  const hasValidDiscount = Number.isFinite(discountPrice) && discountPrice >= 0 && discountPrice < price;
+  return hasValidDiscount ? discountPrice : price;
+}
+
 async function hydrateOrderById(id) {
   return Order.findOne({ id }).populate({
     path: 'items',
@@ -79,7 +86,7 @@ async function createOrder(req, res, next) {
 
       decrementedItems.push({ productId, quantity });
 
-      const priceAtPurchase = Number(product.price);
+      const priceAtPurchase = resolveProductSellingPrice(product);
       totalAmount += priceAtPurchase * quantity;
 
       normalizedItems.push({
