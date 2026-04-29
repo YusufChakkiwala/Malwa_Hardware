@@ -25,16 +25,16 @@ const ChatMessage = require('../src/models/ChatMessage');
 
     await Admin.create({
       id: 1,
-      username: 'admin',
-      passwordHash: await bcrypt.hash('admin123', 10),
+      username: 'HatimChakkiwala',
+      passwordHash: await bcrypt.hash('HatimChakkiwala123', 10),
       role: 'owner'
     });
   });
 
   test('POST /api/admin/login returns JWT token for valid credentials', async () => {
     const response = await request(app).post('/api/admin/login').send({
-      username: 'admin',
-      password: 'admin123'
+      username: 'HatimChakkiwala',
+      password: 'HatimChakkiwala123'
     });
 
     expect(response.status).toBe(200);

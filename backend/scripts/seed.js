@@ -20,9 +20,16 @@ async function upsertCategory({ name, slug }) {
   return Category.create({ id, name, slug });
 }
 
-async function upsertAdmin({ username, password, role }) {
+async function upsertAdmin({ username, password, role, legacyUsername }) {
   const passwordHash = await bcrypt.hash(password, 12);
-  const existing = await Admin.findOne({ username });
+  let existing = await Admin.findOne({ username });
+
+  if (!existing && legacyUsername && legacyUsername !== username) {
+    existing = await Admin.findOne({ username: legacyUsername });
+    if (existing) {
+      existing.username = username;
+    }
+  }
 
   if (existing) {
     existing.passwordHash = passwordHash;
@@ -89,8 +96,9 @@ async function seedFAQs() {
 async function main() {
   await connectDB();
 
-  const username = process.env.ADMIN_SEED_USERNAME || 'admin';
-  const password = process.env.ADMIN_SEED_PASSWORD || 'admin123';
+  const username = process.env.ADMIN_SEED_USERNAME || 'HatimChakkiwala';
+  const password = process.env.ADMIN_SEED_PASSWORD || 'HatimChakkiwala123';
+  const legacyUsername = 'admin';
 
   const categories = [
     { name: 'Tools', slug: 'tools' },
@@ -106,7 +114,8 @@ async function main() {
   await upsertAdmin({
     username,
     password,
-    role: 'owner'
+    role: 'owner',
+    legacyUsername
   });
 
   const toolsCategory = await Category.findOne({ slug: 'tools' });
