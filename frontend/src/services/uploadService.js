@@ -1,4 +1,4 @@
-import api from './api';
+import { apiJson, resolveBackendUrl } from './api';
 
 export async function uploadImage(file) {
   if (!file) {
@@ -8,6 +8,10 @@ export async function uploadImage(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await api.post('/upload', formData);
-  return response.data.url;
+  const response = await apiJson('/api/upload', {
+    method: 'POST',
+    body: formData
+  });
+
+  return resolveBackendUrl(response.url);
 }

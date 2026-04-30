@@ -1,9 +1,27 @@
-import axios from 'axios';
+const API_BASE = import.meta.env.VITE_API_URL;
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
-  withCredentials: true
-});
+// Debug logging
+if (typeof window !== 'undefined') {
+  console.log('API URL:', import.meta.env.MODE, import.meta.env.VITE_API_URL);
+  console.log('[API Config]', {
+    mode: import.meta.env.MODE,
+    apiUrl: API_BASE,
+    apiUrlDefined: !!import.meta.env.VITE_API_URL,
+    timestamp: new Date().toISOString()
+  });
+}
+
+function normalizeEndpoint(endpoint) {
+  if (typeof endpoint !== 'string') {
+    throw new Error('apiFetch endpoint must be a string');
+  }
+
+  if (!endpoint.startsWith('/')) {
+    return `/${endpoint}`;
+  }
+
+  return endpoint;
+}
 
 function parseJwtPayload(token) {
   if (!token || typeof token !== 'string') {
@@ -34,7 +52,8 @@ function isJwtExpired(token) {
 }
 
 function clearAdminToken() {
-  localStorage.removeItem('admin_token');
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem('admin_token');
 }
 
 function redirectToAdminLoginIfNeeded() {
@@ -47,32 +66,128 @@ function redirectToAdminLoginIfNeeded() {
   }
 }
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('admin_token');
-  if (token && !isJwtExpired(token)) {
-    config.headers.Authorization = `Bearer ${token}`;
+async function readErrorMessage(response) {
+  try {
+    const data = await response.json();
+    return data?.message || 'Request failed';
+  } catch {
+    try {
+      const text = await response.text();
+      return text || 'Request failed';
+    } catch {
+      return 'Request failed';
+    }
   }
-  if (token && isJwtExpired(token)) {
+}
+
+export const apiFetch = (endpoint, options = {}) => {
+  const normalizedEndpoint = normalizeEndpoint(endpoint);
+  const baseUrl = typeof API_BASE === 'string' ? API_BASE.replace(/\/$/, '') : '';
+  const url = `${baseUrl}${normalizedEndpoint}`;
+
+  if (!API_BASE) {
+    console.error('[apiFetch] Missing VITE_API_URL. Check your `.env` / build environment.');
+  }
+
+  // Debug: Log the request
+  console.log('[apiFetch] Request', {
+    endpoint: normalizedEndpoint,
+    fullUrl: url,
+    method: options.method || 'GET'
+  });
+
+  const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
+  const tokenExpired = token ? isJwtExpired(token) : false;
+
+  if (token && tokenExpired) {
     clearAdminToken();
     redirectToAdminLoginIfNeeded();
   }
-  return config;
-});
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error?.response?.status;
-    const requestUrl = String(error?.config?.url || '');
-    const isLoginRequest = requestUrl.includes('/admin/login');
-
-    if (status === 401 && !isLoginRequest) {
-      clearAdminToken();
-      redirectToAdminLoginIfNeeded();
-    }
-
-    return Promise.reject(error);
+  const headers = new Headers(options.headers || {});
+  if (token && !tokenExpired && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
-);
 
-export default api;
+  const fetchOptions = {
+    credentials: 'include',
+    ...options,
+    headers
+  };
+
+  return fetch(url, fetchOptions)
+    .then((response) => {
+      // Debug: Log the response status
+      console.log('[apiFetch] Response', {
+        endpoint: normalizedEndpoint,
+        status: response.status,
+        ok: response.ok
+      });
+
+      const isLoginRequest = normalizedEndpoint.includes('/admin/login');
+      if (response.status === 401 && !isLoginRequest) {
+        clearAdminToken();
+        redirectToAdminLoginIfNeeded();
+      }
+
+      return response;
+    })
+    .catch((error) => {
+      if (error?.name !== 'AbortError') {
+        console.error(`[apiFetch] Network error calling ${url}`, error);
+      }
+      throw error;
+    });
+};
+
+export async function apiJson(endpoint, options = {}) {
+  const response = await apiFetch(endpoint, options);
+
+  if (!response.ok) {
+    const message = await readErrorMessage(response);
+    console.error('[apiJson] Request failed', {
+      endpoint,
+      status: response.status,
+      statusText: response.statusText,
+      message
+    });
+    throw new Error(message);
+  }
+
+  try {
+    return await response.json();
+  } catch (error) {
+    console.error('[apiJson] Failed to parse JSON response', { endpoint }, error);
+    throw error;
+  }
+}
+
+export function getApiOrigin() {
+  try {
+    return new URL(API_BASE).origin;
+  } catch {
+    return '';
+  }
+}
+
+export function resolveBackendUrl(path) {
+  if (!path) {
+    return path;
+  }
+
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  if (/^[a-zA-Z]:\\/.test(path)) {
+    return '';
+  }
+
+  const origin = getApiOrigin();
+  if (!origin) {
+    return path;
+  }
+
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${origin}${normalizedPath}`;
+}

@@ -18,10 +18,26 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://malwa-hardware.vercel.app"
+].filter(Boolean);
+
 app.use(
   cors({
-    origin:"http://your-frontend.vercel.app" || 'http://localhost:5173',
-    credentials: true
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps / Postman)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS policy: origin not allowed"));
+      }
+    },
+    credentials: true,
   })
 );
 app.use(helmet());

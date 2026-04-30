@@ -1,31 +1,5 @@
-import api from './api';
+import { apiJson, resolveBackendUrl } from './api';
 import { getPricing, sanitizeUnit } from '../utils/pricing';
-
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-let backendOrigin = 'http://localhost:5000';
-
-try {
-  backendOrigin = new URL(apiBaseUrl).origin;
-} catch {
-  backendOrigin = 'http://localhost:5000';
-}
-
-function resolveImageUrl(imageUrl) {
-  if (!imageUrl) {
-    return imageUrl;
-  }
-
-  if (/^https?:\/\//i.test(imageUrl)) {
-    return imageUrl;
-  }
-
-  if (/^[a-zA-Z]:\\/.test(imageUrl)) {
-    return '';
-  }
-
-  const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-  return `${backendOrigin}${normalizedPath}`;
-}
 
 function normalizeProduct(product) {
   if (!product) {
@@ -39,44 +13,66 @@ function normalizeProduct(product) {
     price: pricing.price,
     discountPrice: pricing.discountPrice,
     unit: sanitizeUnit(product.unit),
-    imageUrl: resolveImageUrl(product.imageUrl)
+    imageUrl: resolveBackendUrl(product.imageUrl)
   };
 }
 
 export async function fetchProducts(params = {}) {
-  const response = await api.get('/products', { params });
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    searchParams.set(key, String(value));
+  });
+
+  const endpoint = searchParams.toString() ? `/api/products?${searchParams}` : '/api/products';
+  const response = await apiJson(endpoint);
   return {
-    ...response.data,
-    data: (response.data.data || []).map(normalizeProduct)
+    ...response,
+    data: (response.data || []).map(normalizeProduct)
   };
 }
 
 export async function fetchProductById(id) {
-  const response = await api.get(`/products/${id}`);
-  return normalizeProduct(response.data);
+  const response = await apiJson(`/api/products/${id}`);
+  return normalizeProduct(response);
 }
 
 export async function createProduct(payload) {
-  const response = await api.post('/products', payload);
-  return normalizeProduct(response.data);
+  const response = await apiJson('/api/products', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+  return normalizeProduct(response);
 }
 
 export async function updateProduct(id, payload) {
-  const response = await api.put(`/products/${id}`, payload);
-  return normalizeProduct(response.data);
+  const response = await apiJson(`/api/products/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+  return normalizeProduct(response);
 }
 
 export async function deleteProduct(id) {
-  const response = await api.delete(`/products/${id}`);
-  return response.data;
+  return apiJson(`/api/products/${id}`, { method: 'DELETE' });
 }
 
 export async function fetchCategories() {
-  const response = await api.get('/categories');
-  return response.data;
+  return apiJson('/api/categories');
 }
 
 export async function createCategory(payload) {
-  const response = await api.post('/categories', payload);
-  return response.data;
+  return apiJson('/api/categories', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
 }

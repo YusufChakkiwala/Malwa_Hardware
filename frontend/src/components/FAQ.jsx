@@ -1,20 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-async function readErrorMessage(response) {
-  try {
-    const data = await response.json();
-    return data?.message || 'Request failed';
-  } catch {
-    try {
-      const text = await response.text();
-      return text || 'Request failed';
-    } catch {
-      return 'Request failed';
-    }
-  }
-}
+import { apiJson } from '../services/api';
 
 function FAQItem({ faq, isOpen, onToggle }) {
   return (
@@ -53,29 +38,18 @@ function FAQ() {
     setError('');
     setLoading(true);
 
-    fetch(`${API_BASE}/faqs`, {
+    apiJson('/api/faqs', {
       method: 'GET',
-      credentials: 'include',
       signal: controller.signal
     })
-      .then(async (response) => {
-        if (!response.ok) {
-          const message = await readErrorMessage(response);
-          throw new Error(message);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setFaqs(Array.isArray(data) ? data : []);
-      })
+      .then((data) => setFaqs(Array.isArray(data) ? data : []))
       .catch((err) => {
         if (err?.name === 'AbortError') return;
+        console.error('[FAQ] Failed to load FAQs', err);
         setError(err?.message || 'Failed to load FAQs.');
         setFaqs([]);
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
 
     return () => controller.abort();
   }, []);
@@ -114,4 +88,3 @@ function FAQ() {
 }
 
 export default FAQ;
-

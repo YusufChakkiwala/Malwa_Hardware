@@ -1,4 +1,4 @@
-import api from './api';
+import { apiJson } from './api';
 
 function parseJwtPayload(token) {
   if (!token || typeof token !== 'string') {
@@ -30,9 +30,15 @@ function isJwtExpired(token) {
 }
 
 export async function loginAdmin(username, password) {
-  const response = await api.post('/admin/login', { username, password });
-  localStorage.setItem('admin_token', response.data.token);
-  return response.data;
+  const data = await apiJson('/api/admin/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, password })
+  });
+  localStorage.setItem('admin_token', data.token);
+  return data;
 }
 
 export function logoutAdmin() {

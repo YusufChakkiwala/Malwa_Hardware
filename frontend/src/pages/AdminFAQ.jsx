@@ -1,21 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminNav from '../components/AdminNav';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-async function readErrorMessage(response) {
-  try {
-    const data = await response.json();
-    return data?.message || 'Request failed';
-  } catch {
-    try {
-      const text = await response.text();
-      return text || 'Request failed';
-    } catch {
-      return 'Request failed';
-    }
-  }
-}
+import { apiJson } from '../services/api';
 
 function normalizeText(value) {
   return String(value ?? '').trim();
@@ -39,21 +24,11 @@ function AdminFAQ() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/faqs`, {
-        method: 'GET',
-        credentials: 'include',
-        signal
-      });
-
-      if (!response.ok) {
-        const message = await readErrorMessage(response);
-        throw new Error(message);
-      }
-
-      const data = await response.json();
+      const data = await apiJson('/api/faqs', { method: 'GET', signal });
       setFaqs(Array.isArray(data) ? data : []);
     } catch (err) {
       if (err?.name === 'AbortError') return;
+      console.error('[AdminFAQ] Failed to fetch FAQs', err);
       setError(err?.message || 'Failed to fetch FAQs.');
       setFaqs([]);
     } finally {
@@ -82,19 +57,13 @@ function AdminFAQ() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE}/faqs`, {
+      await apiJson('/api/faqs', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ question, answer })
       });
-
-      if (!response.ok) {
-        const message = await readErrorMessage(response);
-        throw new Error(message);
-      }
 
       setForm({ question: '', answer: '' });
       setSuccess('FAQ added successfully.');
@@ -102,6 +71,7 @@ function AdminFAQ() {
       const controller = new AbortController();
       await fetchFaqs(controller.signal);
     } catch (err) {
+      console.error('[AdminFAQ] Failed to add FAQ', err);
       setError(err?.message || 'Failed to add FAQ.');
     } finally {
       setSubmitting(false);
@@ -116,20 +86,13 @@ function AdminFAQ() {
     if (!ok) return;
 
     try {
-      const response = await fetch(`${API_BASE}/faqs/${faqId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        const message = await readErrorMessage(response);
-        throw new Error(message);
-      }
+      await apiJson(`/api/faqs/${faqId}`, { method: 'DELETE' });
 
       setSuccess('FAQ deleted.');
       const controller = new AbortController();
       await fetchFaqs(controller.signal);
     } catch (err) {
+      console.error('[AdminFAQ] Failed to delete FAQ', err);
       setError(err?.message || 'Failed to delete FAQ.');
     }
   };
@@ -232,4 +195,3 @@ function AdminFAQ() {
 }
 
 export default AdminFAQ;
-

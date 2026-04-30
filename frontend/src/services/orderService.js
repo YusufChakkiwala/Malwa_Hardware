@@ -1,26 +1,34 @@
-import api from './api';
+import { apiJson } from './api';
 
 export async function createOrder(payload) {
-  const response = await api.post('/orders', payload);
-  return response.data;
+  return apiJson('/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
 }
 
 export async function fetchOrderHistory(customerUid) {
-  const response = await api.get('/orders/history', { params: { customerUid } });
-  return response.data;
+  const searchParams = new URLSearchParams({ customerUid: String(customerUid) });
+  return apiJson(`/api/orders/history?${searchParams}`);
 }
 
 export async function fetchOrders() {
-  const response = await api.get('/orders');
-  return response.data;
+  return apiJson('/api/orders');
 }
 
 export async function fetchOrderById(id) {
-  const response = await api.get(`/orders/${id}`);
-  return response.data;
+  return apiJson(`/api/orders/${id}`);
 }
 
 export async function updateOrderStatus(id, status) {
-  const response = await api.put(`/orders/${id}/status`, { status });
-  return response.data;
+  return apiJson(`/api/orders/${id}/status`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ status })
+  });
 }

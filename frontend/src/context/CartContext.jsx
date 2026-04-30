@@ -1,32 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getPricing, sanitizeUnit } from '../utils/pricing';
+import { resolveBackendUrl } from '../services/api';
 
 const CartContext = createContext(null);
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-let backendOrigin = 'http://localhost:5000';
-
-try {
-  backendOrigin = new URL(apiBaseUrl).origin;
-} catch {
-  backendOrigin = 'http://localhost:5000';
-}
-
 function resolveImageUrl(imageUrl) {
-  if (!imageUrl) {
-    return '';
-  }
-
-  if (/^https?:\/\//i.test(imageUrl)) {
-    return imageUrl;
-  }
-
-  if (/^[a-zA-Z]:\\/.test(imageUrl)) {
-    return '';
-  }
-
-  const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-  return `${backendOrigin}${normalizedPath}`;
+  return resolveBackendUrl(imageUrl) || '';
 }
 
 function normalizeCartItem(item) {

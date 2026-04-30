@@ -1,34 +1,46 @@
-import api from './api';
+import { apiJson } from './api';
 import { uploadImage as uploadFile } from './uploadService';
 
 export async function startChat(payload) {
-  const response = await api.post('/chats', payload);
-  return response.data;
+  return apiJson('/api/chats', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
 }
 
 export async function fetchChatMessages(chatId) {
-  const response = await api.get(`/chats/${chatId}/messages`);
-  return response.data;
+  return apiJson(`/api/chats/${chatId}/messages`);
 }
 
 export async function fetchChats() {
-  const response = await api.get('/chats');
-  return response.data;
+  return apiJson('/api/chats');
 }
 
 export async function submitQuery(payload) {
-  const response = await api.post('/queries', payload);
-  return response.data;
+  return apiJson('/api/queries', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
 }
 
 export async function fetchQueries() {
-  const response = await api.get('/queries');
-  return response.data;
+  return apiJson('/api/queries');
 }
 
 export async function updateQueryStatus(id, status) {
-  const response = await api.put(`/queries/${id}/status`, { status });
-  return response.data;
+  return apiJson(`/api/queries/${id}/status`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ status })
+  });
 }
 
 export async function uploadImage(file) {

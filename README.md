@@ -57,8 +57,8 @@ ADMIN_SEED_PASSWORD="<admin-password>"
 ### Frontend (`frontend/.env`)
 
 ```env
-VITE_API_URL="http://localhost:5000/api"
-VITE_SOCKET_URL="http://localhost:5000"
+VITE_API_URL="https://malwa-hardware-2.onrender.com"
+VITE_SOCKET_URL="https://malwa-hardware-2.onrender.com"
 ```
 
 ## Backend Commands
@@ -116,7 +116,7 @@ docker compose up --build
 Services:
 
 - Frontend: `http://localhost:5173`
-- Backend: `http://localhost:5000`
+- Backend: `https://malwa-hardware-2.onrender.com`
 
 ## Security Note
 
